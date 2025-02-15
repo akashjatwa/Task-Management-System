@@ -25,24 +25,24 @@ namespace TaskManagement.API.Controllers
             return Ok(task);
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TaskItem>> GetTaskById(int id)
+        [HttpGet("{taskCode}")]
+        public async Task<ActionResult<TaskItem>> GetTaskByTaskCode(string taskCode)
         {
-            var task = await _taskService.GetTaskItemByIdAsync(id);
+            var task = await _taskService.GetTaskItemByTaskCodeAsync(taskCode);
             if (task == null)
             {
-                return NotFound($"Task with ID {id} not found.");
+                return NotFound($"Task with ID {taskCode} not found.");
             }
             return Ok(task);
         }
 
-        [HttpPut("{id}")]
-        public async Task<ActionResult<TaskItem>> UpdateTask(int id, [FromBody] TaskItem taskItem)
+        [HttpPut("{taskCode}")]
+        public async Task<ActionResult<TaskItem>> UpdateTask(string taskCode, [FromBody] TaskItem taskItem)
         {
-            var updatedTask = await _taskService.UpdateTaskAsync(id, taskItem);
+            var updatedTask = await _taskService.UpdateTaskAsync(taskCode, taskItem);
             if(updatedTask == null)
             {
-                return NotFound($"Task with ID {id} not found.");
+                return NotFound($"Task with ID {taskCode} not found.");
             }
 
             return Ok(updatedTask);
@@ -61,13 +61,13 @@ namespace TaskManagement.API.Controllers
             return CreatedAtAction(nameof(CreateTask), new { id = createdTask.Id }, createdTask);
         }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTask(int id)
+        [HttpDelete("{taskCode}")]
+        public async Task<IActionResult> DeleteTask(string taskCode)
         {
-            var isDeleted = await _taskService.DeleteTaskAsync(id);
+            var isDeleted = await _taskService.DeleteTaskAsync(taskCode);
             if (!isDeleted)
             {
-                return NotFound($"Task with ID {id} not found.");
+                return NotFound($"Task with ID {taskCode} not found.");
             }
 
             return NoContent();

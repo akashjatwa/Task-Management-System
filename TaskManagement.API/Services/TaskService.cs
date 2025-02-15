@@ -16,7 +16,6 @@ namespace TaskManagement.API.Services
             _context = context;
         }
 
-
         // Return all tasks
         public async Task<IEnumerable<TaskItem>> GetAllTasksAsync()
         {
@@ -28,15 +27,16 @@ namespace TaskManagement.API.Services
                     Description = t.Description,
                     TaskStatus = t.TaskStatus,
                     TaskCode = t.TaskCode,
+                    CreatedAt = t.CreatedAt,
                 })
                 .ToListAsync();
         }
 
 
         // Return single task
-        public async Task<TaskItem?> GetTaskItemByIdAsync(int id)
+        public async Task<TaskItem?> GetTaskItemByTaskCodeAsync(string taskCode)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskCode == taskCode);
 
             if (task == null) return null;
 
@@ -47,6 +47,7 @@ namespace TaskManagement.API.Services
                 Description = task.Description,
                 TaskStatus = task.TaskStatus,
                 TaskCode = task.TaskCode,
+                CreatedAt = task.CreatedAt
             };
         }
 
@@ -58,6 +59,7 @@ namespace TaskManagement.API.Services
                 Title = taskItem.Title,
                 Description = taskItem.Description,
                 TaskStatus = taskItem.TaskStatus,
+                CreatedAt = DateTime.Now,
                 TaskCode = $"TASK-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
             };
 
@@ -74,18 +76,19 @@ namespace TaskManagement.API.Services
             };
         }
 
-        public async Task<TaskItem?> UpdateTaskAsync(int id, TaskItem updatetaskItem)
+        public async Task<TaskItem?> UpdateTaskAsync(string taskCode, TaskItem updatetaskItem)
         {
-            var existingtask = await _context.Tasks.FindAsync(id);
+            var existingtask = await _context.Tasks.FirstOrDefaultAsync(t => t.TaskCode == taskCode);
             if (existingtask == null) return null;
 
             if (!string.IsNullOrEmpty(updatetaskItem.Title))
                 existingtask.Title = updatetaskItem.Title;
 
-            if(!string.IsNullOrEmpty(updatetaskItem.Description))
+            if (!string.IsNullOrEmpty(updatetaskItem.Description))
                 existingtask.Description = updatetaskItem.Description;
 
             existingtask.TaskStatus = updatetaskItem.TaskStatus;
+            existingtask.CreatedAt = DateTime.Now;
 
             _context.Tasks.Update(existingtask);
             await _context.SaveChangesAsync();
@@ -96,14 +99,15 @@ namespace TaskManagement.API.Services
                 TaskCode = existingtask.TaskCode,
                 Title = existingtask.Title,
                 Description = existingtask.Description,
+                CreatedAt = existingtask.CreatedAt,
                 TaskStatus = existingtask.TaskStatus
             };
         }
 
         //Delete a task by its ID
-        public async Task<bool> DeleteTaskAsync(int id)
+        public async Task<bool> DeleteTaskAsync(string taskCode)
         {
-            var task = await _context.Tasks.FindAsync(id);
+            var task = await _context.Tasks.FindAsync(taskCode);
 
             if (task == null) return false;
 

@@ -10,7 +10,8 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add EF Core with SQL Server
 builder.Services.AddDbContext<TaskDbContext>(options =>
-        options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+        
+options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
         );
 
 
@@ -22,6 +23,7 @@ builder.Services.AddSwaggerGen();
 
 //Register the services
 builder.Services.AddScoped<ITaskService, TaskService>();   
+builder.Services.AddScoped<IUserService, UserService>();
 
 var app = builder.Build();
 
