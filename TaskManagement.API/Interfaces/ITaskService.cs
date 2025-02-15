@@ -4,14 +4,22 @@ namespace TaskManagement.API.Interfaces
 {
     public interface ITaskService
     {
-        IEnumerable<TaskItem> GetTasks();
+        /* List<TaskItem> GetTasks();
 
-        TaskItem AddTask(TaskItem task);
+         void UpdateTask(TaskItem updatedTask);
 
-        TaskItem GetTaskById(int id);
+         void DeleteTask(int id);
 
-        TaskItem? UpdateTask(int id, TaskItem task);
-        
-        bool DeleteTask(int id);
+         TaskItem GetTaskById(int id);*/
+
+        Task<IEnumerable<TaskItem>> GetAllTasksAsync();
+
+        Task<TaskItem?> GetTaskItemByIdAsync(int id);
+
+        Task<TaskItem> CreateTaskAsync(TaskItem taskItem); //Adding a new task
+
+        Task<TaskItem?> UpdateTaskAsync(int id , TaskItem updatetaskItem);
+
+        Task<bool> DeleteTaskAsync(int id);
     }
 }

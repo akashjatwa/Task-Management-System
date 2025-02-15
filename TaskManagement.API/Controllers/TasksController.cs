@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
 using TaskManagement.API.Interfaces;
 using TaskManagement.API.Models;
 
@@ -17,69 +18,63 @@ namespace TaskManagement.API.Controllers
             _taskService = taskService;
         }
 
-        // GET: api/<TasksController>
         [HttpGet]
-        public IActionResult GetTasks()
+        public async Task<ActionResult<IEnumerable<TaskItem>>> GetAllTask()
         {
-            var tasks = _taskService.GetTasks();
-            return Ok(tasks);
+            var task = await _taskService.GetAllTasksAsync();
+            return Ok(task);
         }
 
-        // GET api/<TasksController>/5
         [HttpGet("{id}")]
-        public IActionResult GetById(int id)
+        public async Task<ActionResult<TaskItem>> GetTaskById(int id)
         {
-            if(id == null)
+            var task = await _taskService.GetTaskItemByIdAsync(id);
+            if (task == null)
             {
                 return NotFound($"Task with ID {id} not found.");
             }
-
-            var taskItem = _taskService.GetTaskById(id);
-            return Ok(taskItem);
+            return Ok(task);
         }
 
-        // POST api/<TasksController>
-        [HttpPost]
-        public IActionResult AddTask([FromBody] TaskItem task)
-        {
-            if(task == null || string.IsNullOrWhiteSpace(task.Title))
-            {
-                return BadRequest("Task title is required");
-            }
-
-            var createdTask = _taskService.AddTask(task);
-            return CreatedAtAction(nameof(GetTasks), new {id = createdTask.Id}, createdTask);
-        }
-
-        // PUT api/<TasksController>/5
         [HttpPut("{id}")]
-        public IActionResult Put(int id, [FromBody] TaskItem task)
+        public async Task<ActionResult<TaskItem>> UpdateTask(int id, [FromBody] TaskItem taskItem)
         {
-            if (task == null || string.IsNullOrWhiteSpace(task.Title))
-            {
-                return BadRequest("Task title is required");
-            }
-
-            var item = _taskService.UpdateTask(id, task);
-            if(item == null)
+            var updatedTask = await _taskService.UpdateTaskAsync(id, taskItem);
+            if(updatedTask == null)
             {
                 return NotFound($"Task with ID {id} not found.");
             }
 
-            return Ok(item);
+            return Ok(updatedTask);
         }
 
-        // DELETE api/<TasksController>/5
-        [HttpDelete("{id}")]
-        public IActionResult Delete(int id)
+        [HttpPost]
+        public async Task<IActionResult> CreateTask([FromBody] TaskItem taskItem)
         {
-            var isDeleted = _taskService.DeleteTask(id);
+            if (taskItem == null)
+            {
+                return BadRequest("Task data is required.");
+            }
+
+            var createdTask = await _taskService.CreateTaskAsync(taskItem);
+
+            return CreatedAtAction(nameof(CreateTask), new { id = createdTask.Id }, createdTask);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTask(int id)
+        {
+            var isDeleted = await _taskService.DeleteTaskAsync(id);
             if (!isDeleted)
             {
                 return NotFound($"Task with ID {id} not found.");
             }
 
-            return NoContent(); // 204 No Content
+            return NoContent();
         }
+
+
+
+    
     }
 }

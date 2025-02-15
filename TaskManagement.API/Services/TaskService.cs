@@ -1,4 +1,7 @@
-﻿using System.Threading.Tasks;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Threading.Tasks;
+using TaskManagement.API.Data;
+using TaskManagement.API.Data.Entities;
 using TaskManagement.API.Interfaces;
 using TaskManagement.API.Models;
 
@@ -6,54 +9,108 @@ namespace TaskManagement.API.Services
 {
     public class TaskService : ITaskService
     {
-        private readonly List<TaskItem> _tasks = new()
-        {
-        new TaskItem { Id = 1, Title = "Learn C#", Description = "Complete C# basics", Status = "In Progress", CreatedAt = DateTime.UtcNow.AddDays(-2) },
-        new TaskItem { Id = 2, Title = "Build Task API", Description = "Create a simple task management API", Status = "To Do", CreatedAt = DateTime.UtcNow.AddDays(-1) },
-        new TaskItem { Id = 3, Title = "Write Unit Tests", Description = "Add unit tests for services", Status = "Completed", CreatedAt = DateTime.UtcNow }
-        };
+        private readonly TaskDbContext _context;
 
-        public IEnumerable<TaskItem> GetTasks()
+        public TaskService(TaskDbContext context)
         {
-            return _tasks;
+            _context = context;
         }
 
-        public TaskItem AddTask(TaskItem task)
+
+        // Return all tasks
+        public async Task<IEnumerable<TaskItem>> GetAllTasksAsync()
         {
-            task.Id = _tasks.Count + 1;
-            task.CreatedAt = DateTime.UtcNow;
-            _tasks.Add(task);
-            return task;
+            return await _context.Tasks
+                .Select(t => new TaskItem
+                {
+                    Id = t.Id,
+                    Title = t.Title,
+                    Description = t.Description,
+                    TaskStatus = t.TaskStatus,
+                    TaskCode = t.TaskCode,
+                })
+                .ToListAsync();
         }
 
-        public TaskItem GetTaskById(int id)
+
+        // Return single task
+        public async Task<TaskItem?> GetTaskItemByIdAsync(int id)
         {
-            var item = _tasks.FirstOrDefault(t => t.Id == id);
+            var task = await _context.Tasks.FindAsync(id);
 
-            return item;
+            if (task == null) return null;
 
+            return new TaskItem
+            {
+                Id = task.Id,
+                Title = task.Title,
+                Description = task.Description,
+                TaskStatus = task.TaskStatus,
+                TaskCode = task.TaskCode,
+            };
         }
 
-        public TaskItem? UpdateTask(int id, TaskItem task)
+        //Create a new Task
+        public async Task<TaskItem> CreateTaskAsync(TaskItem taskItem)
         {
-            var item = _tasks.FirstOrDefault(t => t.Id == id);
-            if (item == null) return null;
+            var taskEntity = new TaskEntity()
+            {
+                Title = taskItem.Title,
+                Description = taskItem.Description,
+                TaskStatus = taskItem.TaskStatus,
+                TaskCode = $"TASK-{Guid.NewGuid().ToString().Substring(0, 8).ToUpper()}"
+            };
 
-            item.Title = task.Title;
-            item.Description = task.Description;
-            item.Status = task.Status;
+            _context.Tasks.Add(taskEntity);
+            await _context.SaveChangesAsync();
 
-            return item;
+            return new TaskItem
+            {
+                Id = taskItem.Id,
+                TaskCode = taskEntity.TaskCode,
+                Title = taskItem.Title,
+                Description = taskItem.Description,
+                TaskStatus = taskItem.TaskStatus
+            };
         }
 
-        public bool DeleteTask(int id)
+        public async Task<TaskItem?> UpdateTaskAsync(int id, TaskItem updatetaskItem)
         {
-            var item = _tasks.FirstOrDefault(t => t.Id == id);
-            if (item == null) return false;
+            var existingtask = await _context.Tasks.FindAsync(id);
+            if (existingtask == null) return null;
 
-            _tasks.Remove(item);
+            if (!string.IsNullOrEmpty(updatetaskItem.Title))
+                existingtask.Title = updatetaskItem.Title;
 
+            if(!string.IsNullOrEmpty(updatetaskItem.Description))
+                existingtask.Description = updatetaskItem.Description;
+
+            existingtask.TaskStatus = updatetaskItem.TaskStatus;
+
+            _context.Tasks.Update(existingtask);
+            await _context.SaveChangesAsync();
+
+            return new TaskItem
+            {
+                Id = existingtask.Id,
+                TaskCode = existingtask.TaskCode,
+                Title = existingtask.Title,
+                Description = existingtask.Description,
+                TaskStatus = existingtask.TaskStatus
+            };
+        }
+
+        //Delete a task by its ID
+        public async Task<bool> DeleteTaskAsync(int id)
+        {
+            var task = await _context.Tasks.FindAsync(id);
+
+            if (task == null) return false;
+
+            _context.Tasks.Remove(task);
+            await _context.SaveChangesAsync();
             return true;
         }
+
     }
 }
