@@ -9,6 +9,7 @@ namespace TaskManagement.API.Services
     public class UserService : IUserService
     {
         private readonly TaskDbContext _context;
+        private readonly IConfiguration _configuration;
 
         public UserService(TaskDbContext context)
         {

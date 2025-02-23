@@ -12,6 +12,6 @@ namespace TaskManagement.API.Interfaces
         Task<Users> UpdateUserAsync(int id, Users users);
 
         Task<bool> DeleteUserAsync(int id);
-       
+
     }
 }

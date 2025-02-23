@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using TaskManagement.API.Interfaces;
 using TaskManagement.API.Models;
@@ -7,6 +8,7 @@ using TaskManagement.API.Models;
 
 namespace TaskManagement.API.Controllers
 {
+    [Authorize] // Protects all methods in this controller
     [Route("api/[controller]")]
     [ApiController]
     public class TasksController : ControllerBase
@@ -19,6 +21,12 @@ namespace TaskManagement.API.Controllers
         }
 
         [HttpGet]
+        public IActionResult GetTasks()
+        {
+            return Ok(new { Message = "Only authenticated users can access this." });
+        }
+
+        [HttpGet("all")] // <-- Added a unique route
         public async Task<ActionResult<IEnumerable<TaskItem>>> GetAllTask()
         {
             var task = await _taskService.GetAllTasksAsync();
